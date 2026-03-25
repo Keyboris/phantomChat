@@ -8,7 +8,9 @@ from pathlib import Path
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
+from starlette.staticfiles import NotModifiedResponse, StaticFiles
+from starlette.types import Scope
 
 from app.config import Settings, get_settings
 from app.middleware.csrf import CSRFMiddleware
@@ -18,6 +20,21 @@ from app.services.rate_limiter import RateLimiter
 from app.services.session_store import SessionStore
 
 logger = logging.getLogger(__name__)
+
+
+class MJSStaticFiles(StaticFiles):
+    """StaticFiles subclass that serves .mjs files with the correct MIME type.
+
+    Browsers reject ES module imports unless Content-Type is text/javascript.
+    Starlette's default MIME detection returns application/octet-stream for .mjs
+    on systems where the MIME database doesn't include it.
+    """
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        response = await super().get_response(path, scope)
+        if path.endswith(".mjs") and not isinstance(response, NotModifiedResponse):
+            response.headers["content-type"] = "text/javascript; charset=utf-8"
+        return response
 
 
 class ConnectionManager:
@@ -103,9 +120,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(ws.router)
 
     # Static frontend — served at /
+    # MJSStaticFiles ensures .mjs files get text/javascript MIME type,
+    # which browsers require to execute ES module imports.
     frontend_dir = Path(__file__).parent.parent / "frontend"
     if frontend_dir.exists():
-        app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+        app.mount("/", MJSStaticFiles(directory=str(frontend_dir), html=True), name="frontend")
 
     return app
 
