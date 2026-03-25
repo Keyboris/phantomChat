@@ -30,7 +30,7 @@ class MJSStaticFiles(StaticFiles):
     on systems where the MIME database doesn't include it.
     """
 
-    async def get_response(self, path: str, scope: Scope) -> Response:
+    async def get_response(self, path: str, scope: Scope) -> Response:  # type: ignore[override]
         response = await super().get_response(path, scope)
         if path.endswith(".mjs") and not isinstance(response, NotModifiedResponse):
             response.headers["content-type"] = "text/javascript; charset=utf-8"

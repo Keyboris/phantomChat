@@ -81,7 +81,7 @@ btnCreate.addEventListener('click', async () => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     sessionId = data.session_id;
-    connectWS(data.session_code);
+    connectWS(data.session_id);  // pass full session_id — displayed for sharing
   } catch (err) {
     alert('Failed to create session. Try again.');
     btnCreate.disabled = false;
@@ -91,14 +91,19 @@ btnCreate.addEventListener('click', async () => {
 
 // ── Session join ──────────────────────────────────────────────────────────────
 btnJoin.addEventListener('click', async () => {
-  const code = inputCode.value.trim().toUpperCase();
-  if (!code) return;
-  // The session_id is derived from the code — server accepts the full session_id
-  // For join, the user enters the session_code; we need the full session_id.
-  // The server returns session_id on create; the joiner must receive it out-of-band.
-  // Here we treat the input as the full session_id (43 chars) or short code.
-  sessionId = code.length === 43 ? code : code;
-  connectWS(code);
+  const raw = inputCode.value.trim();
+  if (!raw) return;
+
+  // Users share the full session_id (43-char URL-safe token) out-of-band.
+  // The short session_code (12 chars) shown in the UI is display-only —
+  // the server only accepts the full 43-char session_id on the WS endpoint.
+  if (raw.length !== 43) {
+    alert('Invalid session code. Please paste the full session ID shared by your contact (43 characters).');
+    return;
+  }
+
+  sessionId = raw;
+  connectWS(raw.slice(0, 12).toUpperCase());
 });
 
 // ── WebSocket lifecycle ───────────────────────────────────────────────────────
@@ -254,10 +259,26 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
-function showChat(code) {
+function showChat(fullSessionId) {
   screenSetup.classList.add('hidden');
   screenChat.classList.remove('hidden');
-  sessionDisplay.textContent = `Session: ${code}`;
+  // Show the full session_id so the creator can copy and share it
+  sessionDisplay.innerHTML = '';
+  const label = document.createElement('span');
+  label.textContent = 'Share ID: ';
+  label.style.color = 'var(--muted)';
+  const code = document.createElement('code');
+  code.textContent = fullSessionId;
+  code.style.cssText = 'font-size:.75rem;word-break:break-all;cursor:pointer;color:var(--accent);';
+  code.title = 'Click to copy';
+  code.addEventListener('click', () => {
+    navigator.clipboard.writeText(fullSessionId).then(() => {
+      code.textContent = 'Copied!';
+      setTimeout(() => { code.textContent = fullSessionId; }, 1500);
+    });
+  });
+  sessionDisplay.appendChild(label);
+  sessionDisplay.appendChild(code);
 }
 
 function showSetup() {
