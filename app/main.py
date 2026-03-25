@@ -103,10 +103,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Parse comma-separated origins once — supports local dev with multiple ports
+    # e.g. ALLOWED_ORIGIN=http://localhost:8000,http://localhost:8080
+    allowed_origins = [o.strip() for o in settings.allowed_origin.split(",")]
+
     # Middleware order: outermost first (CORS → CSRF → SecurityHeaders)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.allowed_origin],
+        allow_origins=allowed_origins,
         allow_credentials=False,
         allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Content-Type"],

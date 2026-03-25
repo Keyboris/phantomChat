@@ -75,9 +75,10 @@ async def websocket_endpoint(
 
     # --- Pre-accept checks (no accept() yet) ---
 
-    # 1. Origin check
+    # 1. Origin check — supports comma-separated list in settings.allowed_origin
     origin = websocket.headers.get("origin", "")
-    if origin != settings.allowed_origin:
+    allowed_origins = {o.strip() for o in settings.allowed_origin.split(",")}
+    if origin not in allowed_origins:
         await websocket.close(code=1008, reason="Origin not allowed")
         return
 

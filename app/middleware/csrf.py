@@ -22,7 +22,9 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app: object, allowed_origin: str) -> None:
         super().__init__(app)  # type: ignore[arg-type]
-        self._allowed_origin = allowed_origin
+        # Support comma-separated list of allowed origins for local dev
+        # e.g. "http://localhost:8000,http://localhost:8080"
+        self._allowed_origins = {o.strip() for o in allowed_origin.split(",")}
 
     async def dispatch(
         self,
@@ -35,7 +37,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         if request.method in _MUTATING_METHODS:
             origin = request.headers.get("origin", "")
-            if origin != self._allowed_origin:
+            if origin not in self._allowed_origins:
                 return JSONResponse(
                     {"detail": "Forbidden: Origin mismatch"}, status_code=403
                 )
