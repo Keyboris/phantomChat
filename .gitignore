@@ -1,0 +1,13 @@
+.env
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.pyc
+*.pyo
+dist/
+build/
+.coverage
+htmlcov/
+*.egg-info/
+.secrets.baseline

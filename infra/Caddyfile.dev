@@ -1,0 +1,9 @@
+# Local development only — HTTP, no TLS
+# Usage: caddy run --config infra/Caddyfile.dev
+{
+	admin off
+}
+
+:8080 {
+	reverse_proxy localhost:8000
+}

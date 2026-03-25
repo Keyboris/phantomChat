@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self' wss:;" />
+  <title>Phantom Chat</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Session setup screen -->
+  <div id="screen-setup" class="screen">
+    <h1>Phantom Chat</h1>
+    <p class="tagline">Zero-persistence · End-to-end encrypted · No accounts</p>
+
+    <div id="key-status" class="status generating">Generating keypair…</div>
+
+    <div class="panel">
+      <button id="btn-create" disabled>Create Session</button>
+    </div>
+
+    <div class="panel">
+      <input id="input-code" type="text" placeholder="Session code" maxlength="12" autocomplete="off" spellcheck="false" />
+      <button id="btn-join" disabled>Join Session</button>
+    </div>
+  </div>
+
+  <!-- Chat screen -->
+  <div id="screen-chat" class="screen hidden">
+    <header>
+      <span id="status-indicator" class="dot disconnected" title="Connection status"></span>
+      <span id="session-code-display"></span>
+      <button id="btn-end">End Session</button>
+    </header>
+
+    <div id="fingerprint-panel">
+      <strong>Your key fingerprint</strong>
+      <code id="my-fingerprint">—</code>
+      <strong>Peer key fingerprint</strong>
+      <code id="peer-fingerprint">Waiting for peer…</code>
+    </div>
+
+    <div id="messages" role="log" aria-live="polite" aria-label="Chat messages"></div>
+
+    <div id="typing-indicator" class="hidden">Peer is typing…</div>
+
+    <form id="form-send">
+      <input id="input-message" type="text" placeholder="Message" autocomplete="off" spellcheck="false" maxlength="4096" disabled />
+      <button type="submit" id="btn-send" disabled>Send</button>
+    </form>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
