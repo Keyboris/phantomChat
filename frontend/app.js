@@ -247,7 +247,23 @@ btnEnd.addEventListener('click', async () => {
   publicKeyArmor = '';
   peerPublicKey = null;
   sessionId = '';
+
+  // Return to setup and regenerate a fresh keypair for the next session
   showSetup();
+  btnCreate.disabled = true;
+  btnJoin.disabled = true;
+  keyStatus.textContent = 'Generating keypair…';
+  keyStatus.className = 'status generating';
+  try {
+    await generateKeypair();
+    keyStatus.textContent = 'Keypair ready';
+    keyStatus.className = 'status ready';
+    btnCreate.disabled = false;
+    btnJoin.disabled = false;
+  } catch (err) {
+    keyStatus.textContent = 'Key generation failed — reload to retry';
+    console.error('Key generation error:', err);
+  }
 });
 
 // Discard key material on tab close
@@ -288,6 +304,10 @@ function showSetup() {
   peerFpEl.textContent = 'Waiting for peer…';
   inputMsg.disabled = true;
   btnSend.disabled = true;
+  // Re-enable setup buttons — key material was regenerated or still valid
+  btnCreate.disabled = false;
+  btnJoin.disabled = false;
+  inputCode.value = '';
 }
 
 function setStatus(state) {
